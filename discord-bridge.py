@@ -5,11 +5,10 @@ from pypresence import Presence
 import sys
 
 # --- CONFIGURACIÓN ---
-CLIENT_ID = 'YourID' #You can get it in Discord Developers Portals when creating a new app
+CLIENT_ID = 'YOUR_CLIENT_ID'
 # ---------------------
 
 def get_psst_player():
-    # Busca el nombre dinámico de psst en playerctl
     try:
         result = subprocess.run(['playerctl', '-l'], capture_output=True, text=True)
         for p in result.stdout.splitlines():
@@ -31,7 +30,7 @@ def main():
         RPC = Presence(CLIENT_ID)
         RPC.connect()
     except Exception as e:
-        print(f"Error conectando a Discord IPC: {e}")
+        print(f"Error while connecting to Discord IPC: {e}")
         sys.exit(1)
 
     while True:
@@ -44,21 +43,29 @@ def main():
                     title = get_metadata(player, 'title')
                     artist = get_metadata(player, 'artist')
                     
+                    
+                    art_url = get_metadata(player, 'mpris:artUrl')
+                    
                     if title:
-                        # Formateamos para que se vea bien en Discord
+                    
+                        if art_url and art_url.startswith("http"):
+                            imagen = art_url
+                        else:
+                            imagen = "logo" 
+                            
                         RPC.update(
                             details=title[:128],
-                            state=f"de {artist}"[:128] if artist else "Artista desconocido",
-                            large_image="logo" # Cambia esto si no subiste ninguna imagen
+                            state=f"- {artist}"[:128] if artist else "Unknown",
+                            large_image=imagen
                         )
                 else:
                     RPC.clear()
             else:
                 RPC.clear()
         except Exception:
-            pass # Ignoramos errores temporales de lectura
+            pass 
             
-        time.sleep(3) # Revisa qué canción suena cada 3 segundos
+        time.sleep(3)
 
 if __name__ == '__main__':
     main()
